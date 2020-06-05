@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration.AzureAppConfiguration;
+using Microsoft.Extensions.Options;
 
 namespace MyFirstAzureFeatureFlag
 {
@@ -18,9 +20,22 @@ namespace MyFirstAzureFeatureFlag
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((context, builder) =>
+                {
+                    var settings = builder.Build();
+
+                    if (!string.IsNullOrEmpty(settings["AppConfigConnectionString"]))
+                    {
+                        builder.AddAzureAppConfiguration(options => {
+                            options.Connect(settings["AppConfigConnectionString"]);
+                            options.UseFeatureFlags();
+                        });
+                    }
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
                 });
-    }
+
+            }
 }
